@@ -1,8 +1,8 @@
 package tools;
 
-import controllers.Experimenter;
-import models.Experiment;
+import control.ExperimentFrame;
 
+import java.awt.*;
 import java.awt.geom.Area;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -40,6 +41,15 @@ public class Utils {
     public static int randInt(int min, int bound) {
         if (bound <= min) return min;
         else return ThreadLocalRandom.current().nextInt(min, bound);
+    }
+
+    public static int randIntDiffer(int first, int min, int bound) {
+        int r = randInt(min, bound);
+        while (r == first) {
+            r = randInt(min, bound);
+        }
+
+        return r;
     }
 
     /**
@@ -76,7 +86,7 @@ public class Utils {
     public static int mm2px(double mm) {
         String TAG = NAME + "mm2px";
 
-        return (int) ((mm / DISP.MM_in_INCH) * Experimenter.DPI);
+        return (int) ((mm / DISP.MM_in_INCH) * ExperimentFrame.DPI);
     }
 
     /**
@@ -87,7 +97,7 @@ public class Utils {
     public static double px2mm(double px) {
         String TAG = NAME + "px2mm";
 
-        return (px / Experimenter.DPI) * DISP.MM_in_INCH;
+        return (px / ExperimentFrame.DPI) * DISP.MM_in_INCH;
     }
 
     /**
@@ -137,6 +147,14 @@ public class Utils {
      */
     public static int bool2Int(boolean b) {
         return b ? 1 : 0;
+    }
+
+    public static Point point(double x, double y) {
+        return new Point((int) x, (int) y);
+    }
+
+    public static Point transPoint(Point inPoint, int dX, int dY) {
+        return new Point(inPoint.x + dX, inPoint.y + dY);
     }
 
     /**
@@ -204,7 +222,7 @@ public class Utils {
                 Files.createDirectory(dirPath);
                 return;
             } catch (IOException ioe) {
-//                Experimenter.get().showDialog(
+//                ExperimentFrame.get().showDialog(
 //                        "Problem in creating directory: \n" +
 //                        dirPath);
                 ioe.printStackTrace();

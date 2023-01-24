@@ -10,8 +10,13 @@ public class Out {
 
     static {
         toLogList.add("Main");
+        toLogList.add("Time");
         toLogList.add("TrialPanel");
-
+        toLogList.add("DO");
+        toLogList.add("Listener");
+        toLogList.add("NavPanel");
+//        toLogList.add("ContentPanel");
+//        toLogList.add("InRunnable");
     }
 
     /**
@@ -22,21 +27,24 @@ public class Out {
     public static void d(String tag, Object... params) {
         final int pLen = params.length;
 
-        if (pLen > 0) {
-            if (outAll) {
-                StringBuilder sb = new StringBuilder();
-                for (int oi = 0; oi < pLen - 1; oi++) {
-                    sb.append(params[oi]).append(" | ");
-                }
-                sb.append(params[pLen - 1]);
+        if (toLogList.contains(tag)) {
 
-                System.out.println(tag + " >> " + sb);
-            } else if (toShowTag(tag)) {
-                StringBuilder sb = new StringBuilder();
-                for (int oi = 0; oi < pLen - 1; oi++) {
-                    sb.append(params[oi]).append(" | ");
+            if (pLen > 0) {
+                if (outAll) {
+                    StringBuilder sb = new StringBuilder();
+                    for (int oi = 0; oi < pLen - 1; oi++) {
+                        sb.append(params[oi]).append(" | ");
+                    }
+                    sb.append(params[pLen - 1]);
+
+                    System.out.println(tag + " >> " + sb);
+                } else if (toShowTag(tag)) {
+                    StringBuilder sb = new StringBuilder();
+                    for (int oi = 0; oi < pLen - 1; oi++) {
+                        sb.append(params[oi]).append(" | ");
+                    }
+                    sb.append(params[pLen - 1]);
                 }
-                sb.append(params[pLen - 1]);
             }
         }
     }

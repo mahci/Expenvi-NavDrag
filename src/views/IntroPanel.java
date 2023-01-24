@@ -1,6 +1,6 @@
 package views;
 
-import controllers.Experimenter;
+import control.ExperimentFrame;
 
 import javax.swing.*;
 import java.awt.*;
@@ -28,7 +28,7 @@ public class IntroPanel extends JPanel {
         add(Box.createRigidArea(new Dimension(0, 200)));
 
         getInputMap().put(KS_SPACE, KeyEvent.VK_SPACE);
-        getActionMap().put(KeyEvent.VK_SPACE, Experimenter.get().startTrialsAction);
+        getActionMap().put(KeyEvent.VK_SPACE, ExperimentFrame.get().startTrialsAction);
 
     }
 

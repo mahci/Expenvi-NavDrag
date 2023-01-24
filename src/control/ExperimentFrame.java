@@ -1,21 +1,21 @@
-package controllers;
+package control;
 
 import configs.Consts.*;
 import models.Experiment;
 import models.Trial;
-import tools.Out;
-import tools.Sounder;
-import tools.Utils;
 import views.IntroPanel;
 import views.TrialPanel;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
-public class Experimenter extends JFrame {
+public class ExperimentFrame extends JFrame {
     private final String TAG = this.getClass().getSimpleName();
-    public static Experimenter self;
+
+    public static ExperimentFrame self;
 
     // Constants
     public final static int DPI = DISP.APPLE_DISP_PPI;
@@ -57,13 +57,24 @@ public class Experimenter extends JFrame {
 
     //----------------------------------------------------------------------
 
-    private Experimenter() {
+    private ExperimentFrame() {
         setDisplayConfig();
         setBackground(Color.WHITE);
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {}
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+                super.windowClosing(e);
+                Server.get().close();
+            }
+        });
     }
 
-    public static Experimenter get() {
-        if (self == null) self = new Experimenter();
+    public static ExperimentFrame get() {
+        if (self == null) self = new ExperimentFrame();
         return self;
     }
 
@@ -73,6 +84,7 @@ public class Experimenter extends JFrame {
         add(new IntroPanel());
         setVisible(true);
     }
+
 
     public boolean checkSuccess() {
 //        if (mTrialPanel != null) {
@@ -87,6 +99,14 @@ public class Experimenter extends JFrame {
     }
 
     public void nextTrial() {
+
+        getContentPane().removeAll();
+        mTrialPanel = new TrialPanel(new Trial());
+        getContentPane().add(mTrialPanel);
+        mTrialPanel.requestFocusInWindow();
+
+        revalidate();
+
         // Next trial (if there are any)
 //        if (mTrialInd < mExperiment.getNTrials() - 1) {
 //            mTrial = mExperiment.getTrial(++mTrialInd);
@@ -138,6 +158,21 @@ public class Experimenter extends JFrame {
         );
     }
 
-    // ----------------------------------------------------------------------
+    // Actions ----------------------------------------------------------------------
+    public void grab() {
+        if (mTrialPanel != null) mTrialPanel.grabObject();
+    }
+
+    public void release() {
+        if (mTrialPanel != null) mTrialPanel.release();
+    }
+
+    public void navUp() {
+        if (mTrialPanel != null) mTrialPanel.navUp();
+    }
+
+    public void navDown() {
+        if (mTrialPanel != null) mTrialPanel.navDown();
+    }
 
 }

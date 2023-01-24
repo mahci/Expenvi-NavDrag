@@ -1,9 +1,12 @@
-import controllers.Experimenter;
+import control.ExperimentFrame;
+import control.Server;
 
 import javax.swing.*;
 
 public class Main {
+
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> Experimenter.get().startExperiment());
+        Server.get().start();
+        SwingUtilities.invokeLater(() -> ExperimentFrame.get().startExperiment());
     }
 }

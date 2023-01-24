@@ -6,6 +6,8 @@ import tools.Utils;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.dnd.*;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
@@ -14,14 +16,23 @@ import java.util.List;
 public class NavPanel extends JPanel {
     private final String TAG = this.getClass().getSimpleName();
 
-    private List<JLabel> tabs = new ArrayList<>();
+    private final List<Tab> mTabs = new ArrayList<>();
+    private final int width, height;
+
+    private boolean mActivatingTabs;
+
+    private MouseAdapter mTabMouseAdapter;
+
+    private int mTabUnderCursorId = -1;
+    private int mAcitveTabIndex = -1;
+    private int mHoverTabIndex = -1;
 
     public NavPanel(int nTabs) {
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setLayout(null);
 
         // Set the background and the border
         setBackground(Experiment.NAV_PANEL_BG_COLOR);
-        setBorder(BorderFactory.createLineBorder(Experiment.NAV_PANEL_BORDER_COLOR, 2));
+        setBorder(BorderFactory.createLineBorder(Experiment.NAV_PANEL_BORDER_COLOR, 1));
 
         // Set the dimension
         int tabH = Utils.mm2px(Experiment.TABS_H_mm);
@@ -29,73 +40,77 @@ public class NavPanel extends JPanel {
         int margin = Utils.mm2px(Experiment.TABS_MARGIN_mm);
         int twoMargin = 2 * margin;
         int gutter = Utils.mm2px(Experiment.TABS_GUTTER_mm);
-        int allTabsH = nTabs * tabH + (nTabs - 1) * gutter;
+        int tabsH = nTabs * tabH + (nTabs - 1) * gutter;
+        width = tabW + twoMargin;
+        height = tabsH + twoMargin;
 
-        Dimension dim = new Dimension(
-                twoMargin + tabW,
-                twoMargin + allTabsH);
+        setPreferredSize(new Dimension(width, height));
 
-        Dimension tabDim = new Dimension(tabW, tabH);
-
-        Out.d(TAG, dim);
-        Out.d(TAG, "Tab Dim", tabW);
-        setSize(dim);
-//        setPreferredSize(dim);
-
-        // Create tabs
+        //-- Create tabs
         for (int i = 0; i < nTabs; i++) {
-            JLabel tabLabel = new JLabel();
-//            tabLabel.setPreferredSize(tabDim);
-            tabLabel.setMaximumSize(tabDim);
-            tabLabel.setOpaque(true);
-            tabLabel.setBackground(Experiment.TAB_DEFAULT_COLOR);
-            tabLabel.addMouseListener(new TabHandler());
+            Tab tab = new Tab(i);
 
-            tabs.add(tabLabel);
+            tab.setOpaque(true);
+            tab.setBackground(Experiment.TAB_DEFAULT_COLOR);
+
+            mTabs.add(tab);
         }
 
-        // Put components together
-        Component gutterSpace = Box.createRigidArea(new Dimension(0, gutter));
-        Component marginSpace = Box.createRigidArea(new Dimension(0, margin));
 
-        add(marginSpace);
+        // Add tabs to the layout
+        for (int i = 0; i < mTabs.size(); i++) {
+            int y = margin + i * (tabH + gutter);
+            mTabs.get(i).setBounds(margin, y, tabW, tabH);
 
-        for (int i = 0; i < tabs.size() - 1; i++) {
-            add(tabs.get(i));
-            add(gutterSpace);
+            add(mTabs.get(i));
         }
-        add(tabs.get(tabs.size() - 1)); // Last tab
-
-        add(marginSpace);
 
     }
 
-    // ----------------------------------------------------------------------
-    private class TabHandler implements MouseListener {
+    public void setTabActivation(boolean status) {
+        mActivatingTabs = status;
+    }
 
-        @Override
-        public void mouseClicked(MouseEvent e) {
 
+    public void activateTab(int tabIndex) {
+        mAcitveTabIndex = tabIndex;
+        revalidate();
+    }
+
+    /**
+     * Find out if there is a tab under the cursor
+     * @param curPos Cursor position (rel. to the TrialPanel)
+     * @return Tab index (-1 if none found)
+     */
+    public int getTabUnderCursor(Point curPos) {
+        Point relPos = new Point(curPos.x - getX(), curPos.y - getY()); // Get the point relative to navPanel
+        for (Tab tab : mTabs) {
+            if (tab.getBounds().contains(relPos)) {
+                mHoverTabIndex = tab.id;
+                revalidate();
+                return tab.id;
+            }
         }
 
-        @Override
-        public void mousePressed(MouseEvent e) {
+        return -1;
+    }
 
-        }
+    public int getHeight() {
+        return height;
+    }
 
-        @Override
-        public void mouseReleased(MouseEvent e) {
+    @Override
+    public void revalidate() {
+        super.revalidate();
 
-        }
+        if (mTabs != null) {
+            for (Tab tab : mTabs) {
+                tab.setBackground(Experiment.TAB_DEFAULT_COLOR);
+            }
 
-        @Override
-        public void mouseEntered(MouseEvent e) {
-            // Change the color...
-        }
-
-        @Override
-        public void mouseExited(MouseEvent e) {
-
+            if (mAcitveTabIndex > -1) mTabs.get(mAcitveTabIndex).setBackground(Experiment.TAB_ACTIVE_COLOR);
+            if (mHoverTabIndex > -1) mTabs.get(mHoverTabIndex).setBackground(Experiment.TAB_HIGHLIGHT_COLOR);
         }
     }
+
 }
