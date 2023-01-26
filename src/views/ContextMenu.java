@@ -11,6 +11,8 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static configs.Consts.*;
+
 public class ContextMenu extends JPopupMenu {
 
     private final int MARGIN = Utils.mm2px(1);
@@ -57,16 +59,33 @@ public class ContextMenu extends JPopupMenu {
         setPreferredSize(new Dimension(width, height));
     }
 
+    public void assignCutAction(Action cutAction) {
+        mCutItem.setAction(cutAction);
+    }
+
+    public void assignPasteAction(Action pasteAction) {
+        mPasteItem.setAction(pasteAction);
+    }
+
     /**
      * Show the menu
      * @param invoker The component to show in relation to
-     * @param action The ACTION (e.g. CUT)
      * @param location Coordinates on the screen to show the menu (in relation to the invker)
      */
-    public void show(Component invoker, Experiment.ACTION action, Point location) {
-        // Replace with Cut or Paste
-        if (action == Experiment.ACTION.CUT) mItems.set(Experiment.INDEX_CUT_OPTION, mCutItem);
-        if (action == Experiment.ACTION.PASTE) mItems.set(Experiment.INDEX_PASTE_OPTION, mPasteItem);
+    public void show(Component invoker, Action action, Point location) {
+        // Replace with Cut or Paste + assing the action
+        switch ((String) action.getValue(Action.NAME)) {
+
+            case STRINGS.CUT -> {
+                mCutItem.setAction(action);
+                mItems.set(Experiment.INDEX_CUT_OPTION, mCutItem);
+            }
+
+            case STRINGS.PASTE -> {
+                mPasteItem.setAction(action);
+                mItems.set(Experiment.INDEX_PASTE_OPTION, mPasteItem);
+            }
+        }
 
         // Add the items to the menu
         for (JMenuItem item : mItems) {

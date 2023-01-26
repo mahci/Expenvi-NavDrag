@@ -108,10 +108,12 @@ public class Consts {
         public final static String GRAB = "GRAB";
         public final static String RELEASE = "RELEASE";
         public final static String REVERT = "REVERT";
-
         public final static String NAV = "NAV";
         public final static String UP = "UP";
         public final static String DOWN = "DOWN";
+
+        public final static String CUT = "Cut";
+        public final static String PASTE = "Past";
 
         //-- Messages
         public static final String INTRO_MSSG = "Press SPACE to begin";

@@ -85,6 +85,7 @@ public class NavPanel extends JPanel {
     public int getTabUnderCursor(Point curPos) {
         Point relPos = new Point(curPos.x - getX(), curPos.y - getY()); // Get the point relative to navPanel
         for (Tab tab : mTabs) {
+            Out.d(TAG, tab.getBounds(), curPos, relPos);
             if (tab.getBounds().contains(relPos)) {
                 mHoverTabIndex = tab.id;
                 revalidate();

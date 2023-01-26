@@ -1,5 +1,6 @@
 package views;
 
+import configs.Consts.*;
 import control.ExperimentFrame;
 import models.Content;
 import models.Experiment;
@@ -19,15 +20,12 @@ public class TrialPanel extends JLayeredPane {
 
     private NavPanel mNavPanel;
     private ContentPanel mContPanel;
-//    private ContextMenuPanel mContextMenu;
     private ContextMenu mMenu;
     private DragObject mObject;
+    private JPanel mColorIndic;
 
     private final MoPoint NAV_PANEL_POS = new MoPoint();
     private MoPoint mContPanelPos;
-
-//    private final MoRectangle mObjectRect;
-//    private int mObjectSize;
 
     private Point mGrabPos = new Point();
     private Point mCursorPos = new Point();
@@ -36,6 +34,9 @@ public class TrialPanel extends JLayeredPane {
 
     //-- States
     private boolean mObjGrabbed, mObjCut, mObjPasted;
+
+    //-- Actions
+    private Action mCutAction, mPasteAction;
 
     // Experiment
     private final int mTargetTabIndex = Utils.randInt(0, Experiment.N_TABS);
@@ -53,41 +54,27 @@ public class TrialPanel extends JLayeredPane {
         setBackground(Color.WHITE);
         setLayout(null);
 
-        //-- Listeners
+        setAdapters();
+        setActions();
+
+        addPanels();
+        addObject();
+
+        setTimers();
+
+        dragStart = 0;
+        mColorIndic.setVisible(false);
+        mActiveTabIndex = mStartTabIndex;
+        activateTabContent();
+    }
+
+    private void setAdapters() {
         mMouseAdapter = new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-
-//                if (e.getSource().getClass().equals(ContextMenuPanel.class)) {
-//                    Out.d(TAG, "mouseEntered", "ContextMenuPanel");
-//                    mContextMenu.highlightItems(getCursorPos());
-//                }
-
-//                if (e.getSource() instanceof NavPanel) {
-//                    if (mGrabbed) {
-//                        Out.d(TAG, "mouseEntered", "highlight");
-//                        mNavPanel.highlightTab();
-//                    }
-//                }
-            }
 
             @Override
-            public void mouseExited(MouseEvent e) {
-//                if (e.getSource() instanceof DragObject) {
-//                    mCursorInObject = false;
-//                }
-            }
-
-            @Override
-            public void mouseMoved(MouseEvent e) {
-//                if (e.getSource().getClass().equals(ContextMenuPanel.class)) {
-//                    mContextMenu.highlightItems(getCursorPos());
-//                }
-            }
-
-            //            @Override
             public void mousePressed(MouseEvent e) {
-//                Out.d(TAG, "mousePressed");
+//                Out.d(TAG, "mousePressed", e.getSource().getClass());
+                // Pressed on the Object
                 if (e.getSource().getClass().equals(DragObject.class)) {
                     Out.d(TAG, "mousePressed", "Press");
                     if (e.getButton() == MouseEvent.BUTTON1) {
@@ -99,6 +86,19 @@ public class TrialPanel extends JLayeredPane {
                         else showContextMenu(ContextMenuPanel.MENU_TYPE.PASTE);
                     }
                 }
+
+                // Pressed anywhere inside Nav
+                if (e.getSource().getClass().equals(NavPanel.class)) {
+                    // Check which tab sursor is over and activate it
+                    mUnderCursorTabIndex = mNavPanel.getTabUnderCursor(getCursorPos());
+                    if (mUnderCursorTabIndex != -1) {
+
+                        mActiveTabIndex = mUnderCursorTabIndex;
+                        activateTabContent();
+                    }
+
+                }
+
             }
 
             @Override
@@ -108,19 +108,34 @@ public class TrialPanel extends JLayeredPane {
                     if (e.getSource().getClass().equals(DragObject.class)) {
                         dragObject();
                     }
-
-                    if (e.getSource().getClass().equals(NavPanel.class)) {
-
-                    }
                 }
 
             }
         };
+    }
 
-        addPanels();
-        addObject();
+    private void setActions() {
+        mCutAction = new AbstractAction(STRINGS.CUT) {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Show the color indicator
+                mColorIndic.setBackground(mTargetColor);
+                mColorIndic.setVisible(true);
 
-        dragStart = 0;
+                // Hide the object
+                mObject.setVisible(false);
+            }
+        };
+    }
+
+    private void setTimers() {
+        tabTimer = new Timer(Experiment.TIME_TAB_ACTIVATION, arg0 -> {
+            if (mUnderCursorTabIndex == mHoverTabIndex) { // Check if still on the highlighted tab
+                mActiveTabIndex = mHoverTabIndex;
+                activateTabContent();
+            }
+        });
+        tabTimer.setRepeats(false); // Only execute once
     }
 
     private void addPanels() {
@@ -132,16 +147,14 @@ public class TrialPanel extends JLayeredPane {
         mNavPanel = new NavPanel(Experiment.N_TABS);
         Dimension navSize = mNavPanel.getPreferredSize();
         mNavPanel.setBounds(NAV_PANEL_POS.x, NAV_PANEL_POS.y, navSize.width, navSize.height);
+        mNavPanel.addMouseListener(mMouseAdapter);
         add(mNavPanel, JLayeredPane.DEFAULT_LAYER);
-
 
         //-- Shuffle the list of colors and set start = target color
         ArrayList<Color> colors = new ArrayList<>(Experiment.COLOR_LIST);
         Collections.shuffle(colors);
         mTargetColor = colors.get(mStartTabIndex); // Random because of shuffle
         colors.set(mTargetTabIndex, mTargetColor);
-        Out.d(TAG, mStartTabIndex, mTargetTabIndex);
-        Out.d(TAG, colors);
 
         //-- Generate Contents
         contents = new Content[Experiment.N_TABS];
@@ -154,9 +167,8 @@ public class TrialPanel extends JLayeredPane {
         mContPanelPos = NAV_PANEL_POS.trans(navSize.width, 0);
         mContPanel = new ContentPanel(navSize.height);
         mContPanel.setBounds(mContPanelPos.x, mContPanelPos.y, mContPanel.getWidth(), navSize.height);
-
-        add(mContPanel, JLayeredPane.DEFAULT_LAYER);
         mContPanel.addMouseListener(mMouseAdapter);
+        add(mContPanel, JLayeredPane.DEFAULT_LAYER);
 
         //-- TODO: Only add when in Mouse mode
         mMenu = new ContextMenu();
@@ -166,17 +178,14 @@ public class TrialPanel extends JLayeredPane {
 //        mContextMenu.addMouseMotionListener(mMouseAdapter);
 
         // Set the initial tab
-        mActiveTabIndex = mStartTabIndex;
-        activateTabContent();
 
-        // Create the tab timer
-        tabTimer = new Timer(Experiment.TIME_TAB_ACTIVATION, arg0 -> {
-            if (mUnderCursorTabIndex == mHoverTabIndex) { // Check if still on the highlighted tab
-                mActiveTabIndex = mHoverTabIndex;
-                activateTabContent();
-            }
-        });
-        tabTimer.setRepeats(false); // Only execute once
+        //-- Set up the color indicator
+        int clrIndH = Utils.mm2px(Experiment.COLOR_INDIC_H_mm);
+        int clrIndMargin = Utils.mm2px(Experiment.TABS_GUTTER_mm);
+        mColorIndic = new JPanel();
+        mColorIndic.setBounds(mContPanelPos.x, mContPanelPos.y - (clrIndH + clrIndMargin),
+                mContPanel.getWidth() / 4, clrIndH);
+        add(mColorIndic);
     }
 
     private void addObject() {
@@ -192,6 +201,7 @@ public class TrialPanel extends JLayeredPane {
 
         mObject.addMouseListener(mMouseAdapter);
         mObject.addMouseMotionListener(mMouseAdapter);
+        mObject.setVisible(false); // Default
     }
 
     /**
@@ -204,7 +214,12 @@ public class TrialPanel extends JLayeredPane {
             mContPanel.updateContent(contents[mActiveTabIndex]);
             mNavPanel.activateTab(mActiveTabIndex);
 
-            repaint(); // To always show the obj. on top of the tabs
+            // Show Object only on start tab index
+            if (mActiveTabIndex == mStartTabIndex) mObject.setVisible(true);
+            else mObject.setVisible(false);
+
+            revalidate();
+            repaint(); // Required always show the obj. on top of the tabs
         }
 
     }
@@ -251,7 +266,7 @@ public class TrialPanel extends JLayeredPane {
 
         mGrabPos = mCursorPos;
 
-        mUnderCursorTabIndex = mNavPanel.getTabUnderCursor(new MoPoint(mCursorPos));
+        mUnderCursorTabIndex = mNavPanel.getTabUnderCursor(mCursorPos);
         if (mUnderCursorTabIndex != -1) {
             mHoverTabIndex = mUnderCursorTabIndex;
             tabTimer.restart(); // Go go go!
@@ -314,7 +329,7 @@ public class TrialPanel extends JLayeredPane {
 //        mMenu.setLocation();
 //        mMenu.show(this, curPos.x, curPos.y);
 
-        mMenu.show(this, Experiment.ACTION.PASTE, curPos);
+        mMenu.show(this, mCutAction, curPos);
     }
 
 }

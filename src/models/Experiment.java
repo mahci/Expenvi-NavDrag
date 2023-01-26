@@ -16,6 +16,7 @@ public class Experiment {
     public static final int TABS_W_mm = 36; // Tab width (mm)
     public static final int TABS_GUTTER_mm = 1; // Gutter between tabs (mm)
     public static final int TABS_MARGIN_mm = 3; // All around margin of tabs (mm)
+    public static final int COLOR_INDIC_H_mm = 6; // Height of the cut color indicator, on top of panels
     public static final int MENU_ITEM_H_mm = 5; // Menu item height (mm) [macOS Finder]
     public static final int MENU_ITEM_W_mm = 50; // Menu item width (mm) [macOS Finder]
     public static final int MENU_ITEM_MARGIN_mm = 1; // L/R margin of menu items (mm) [macOS Finder]
@@ -47,11 +48,6 @@ public class Experiment {
     public static Color TAB_HIGHLIGHT_COLOR = COLORS.BLUE_700;
     public static Color OBJECT_BORDER__COLOR = COLORS.GRAY_900;
     public static List<Color> COLOR_LIST = new ArrayList<>();
-
-    //-- Actions
-    public static enum ACTION {
-        CUT, PASTE
-    }
 
     // -------------------------------------------------------------------------
 
