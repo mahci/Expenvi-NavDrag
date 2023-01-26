@@ -10,10 +10,6 @@ import tools.Utils;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.dnd.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,7 +19,8 @@ public class TrialPanel extends JLayeredPane {
 
     private NavPanel mNavPanel;
     private ContentPanel mContPanel;
-    private ContextMenuPanel mContextMenu;
+//    private ContextMenuPanel mContextMenu;
+    private ContextMenu mMenu;
     private DragObject mObject;
 
     private final MoPoint NAV_PANEL_POS = new MoPoint();
@@ -32,14 +29,13 @@ public class TrialPanel extends JLayeredPane {
 //    private final MoRectangle mObjectRect;
 //    private int mObjectSize;
 
-    private boolean mCursorInObject, mGrabbed;
-    private boolean mItemGrabbed = false;
-    private boolean mCursorInNavPanel = false;
-
     private Point mGrabPos = new Point();
     private Point mCursorPos = new Point();
 
     MouseAdapter mMouseAdapter;
+
+    //-- States
+    private boolean mObjGrabbed, mObjCut, mObjPasted;
 
     // Experiment
     private final int mTargetTabIndex = Utils.randInt(0, Experiment.N_TABS);
@@ -61,10 +57,11 @@ public class TrialPanel extends JLayeredPane {
         mMouseAdapter = new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-//                Out.d(TAG, "mouseEntered");
-                if (e.getSource() instanceof DragObject) {
-                    mCursorInObject = true;
-                }
+
+//                if (e.getSource().getClass().equals(ContextMenuPanel.class)) {
+//                    Out.d(TAG, "mouseEntered", "ContextMenuPanel");
+//                    mContextMenu.highlightItems(getCursorPos());
+//                }
 
 //                if (e.getSource() instanceof NavPanel) {
 //                    if (mGrabbed) {
@@ -76,16 +73,19 @@ public class TrialPanel extends JLayeredPane {
 
             @Override
             public void mouseExited(MouseEvent e) {
-                if (e.getSource() instanceof DragObject) {
-                    mCursorInObject = false;
-                }
-
-                if (e.getSource() instanceof NavPanel) {
-                    mCursorInNavPanel = false;
-                }
+//                if (e.getSource() instanceof DragObject) {
+//                    mCursorInObject = false;
+//                }
             }
 
-//            @Override
+            @Override
+            public void mouseMoved(MouseEvent e) {
+//                if (e.getSource().getClass().equals(ContextMenuPanel.class)) {
+//                    mContextMenu.highlightItems(getCursorPos());
+//                }
+            }
+
+            //            @Override
             public void mousePressed(MouseEvent e) {
 //                Out.d(TAG, "mousePressed");
                 if (e.getSource().getClass().equals(DragObject.class)) {
@@ -95,7 +95,8 @@ public class TrialPanel extends JLayeredPane {
                     }
 
                     if (e.getButton() == MouseEvent.BUTTON3) {
-                        showContextMenu();
+                        if (!mObjCut) showContextMenu(ContextMenuPanel.MENU_TYPE.CUT);
+                        else showContextMenu(ContextMenuPanel.MENU_TYPE.PASTE);
                     }
                 }
             }
@@ -158,7 +159,11 @@ public class TrialPanel extends JLayeredPane {
         mContPanel.addMouseListener(mMouseAdapter);
 
         //-- TODO: Only add when in Mouse mode
-        mContextMenu = new ContextMenuPanel();
+        mMenu = new ContextMenu();
+//        mMenu.setInvoker(this);
+//        mContextMenu = new ContextMenuPanel();
+//        mContextMenu.addMouseListener(mMouseAdapter);
+//        mContextMenu.addMouseMotionListener(mMouseAdapter);
 
         // Set the initial tab
         mActiveTabIndex = mStartTabIndex;
@@ -225,7 +230,7 @@ public class TrialPanel extends JLayeredPane {
 
     public void grabObject() {
         mGrabPos = getCursorPos();
-        mGrabbed = true;
+        mObjGrabbed = true;
 
         mNavPanel.setTabActivation(true);
 
@@ -259,7 +264,7 @@ public class TrialPanel extends JLayeredPane {
 
     public void release() {
         Out.d(TAG, mActiveTabIndex, mTargetTabIndex);
-        if (mGrabbed) {
+        if (mObjGrabbed) {
             if (mActiveTabIndex == mTargetTabIndex) {
                 double trialTime = (Utils.nowMillis() - dragStart) / 1000.0;
                 Out.d("Time", String.format("Trial time = %.3f", trialTime));
@@ -270,7 +275,7 @@ public class TrialPanel extends JLayeredPane {
                 ExperimentFrame.get().nextTrial();
             }
 
-            mGrabbed = false;
+            mObjGrabbed = false;
             mNavPanel.setTabActivation(false);
         }
     }
@@ -293,17 +298,23 @@ public class TrialPanel extends JLayeredPane {
         Out.d(TAG, mActiveTabIndex, mTargetTabIndex);
     }
 
-    public void showContextMenu() {
+    public void showContextMenu(ContextMenuPanel.MENU_TYPE type) {
         Out.d(TAG, "Showing context menu");
-        remove(mContextMenu);
-
-        Dimension menuDim = mContextMenu.getPreferredSize();
+//        remove(mContextMenu);
+//
+//        Dimension menuDim = mContextMenu.getPreferredSize();
         Point curPos = getCursorPos();
-        mContextMenu.setBounds(curPos.x, curPos.y, menuDim.width, menuDim.height);
+//        mContextMenu.setBounds(curPos.x, curPos.y, menuDim.width, menuDim.height);
+//        mContextMenu.create(type);
+//
+//        add(mContextMenu, JLayeredPane.POPUP_LAYER);
+//
+//        repaint();
 
-        add(mContextMenu, JLayeredPane.POPUP_LAYER);
+//        mMenu.setLocation();
+//        mMenu.show(this, curPos.x, curPos.y);
 
-        repaint();
+        mMenu.show(this, Experiment.ACTION.PASTE, curPos);
     }
 
 }

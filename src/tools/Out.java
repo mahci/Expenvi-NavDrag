@@ -15,6 +15,8 @@ public class Out {
         toLogList.add("DO");
         toLogList.add("Listener");
         toLogList.add("NavPanel");
+        toLogList.add("Item");
+        toLogList.add("ContextMenuPanel");
 //        toLogList.add("ContentPanel");
 //        toLogList.add("InRunnable");
     }

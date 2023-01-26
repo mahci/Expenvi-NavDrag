@@ -34,6 +34,7 @@ public class Consts {
         public final static Color BLUE_200 = Color.decode("#90CAF9");
         public final static Color BLUE_300 = Color.decode("#64B5F6");
         public final static Color BLUE_500 = Color.decode("#2196F3");
+        public final static Color BLUE_700 = Color.decode("#1976D2");
         public final static Color BLUE_800 = Color.decode("#1565C0");
         public final static Color BLUE_900 = Color.decode("#0D47A1");
         public final static Color BLUE_900_ALPHA = new Color(13, 71, 161, 170);

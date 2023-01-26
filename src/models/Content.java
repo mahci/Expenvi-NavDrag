@@ -17,7 +17,7 @@ public class Content {
         this.isEmpty = isEmpty;
 
         if (isEmpty) nItems = 0;
-        else nItems = Utils.randInt(1, Experiment.MAX_N_ITEMS);
+        else nItems = Utils.randInt(1, Experiment.N_CONTENT_ITEMS_MAX);
 
         this.itemsColor = itemsColor;
     }
